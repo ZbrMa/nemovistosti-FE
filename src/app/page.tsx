@@ -143,9 +143,9 @@ export default async function Home() {
           ]),
         }}
       />
-      <div className="mx-auto w-full max-w-[1300px] px-5 lg:px-8">
+      <div className="mx-auto w-full max-w-[1300px] px-0 lg:px-8">
         <HomeHero hasDataError={data.hasDataError} />
-        <div className="space-y-12 border-x border-border border-dashed">
+        <div className="space-y-12 border-x border-border border-dashed pt-6 lg:pt-0">
           <MarketKpiSection
             rentActivitySummary={data.rentActivitySummary}
             rentOverview={data.rentOverview}

@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 function PageFrame({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-[1300px] px-5 lg:px-8">
+    <div className="mx-auto w-full max-w-[1300px] px-0 lg:px-8">
       <div className="border-x border-dashed border-border">{children}</div>
     </div>
   );
@@ -102,7 +102,7 @@ export function HomePageLoading() {
 
 export function ListingsPageLoading() {
   return (
-    <div className="mx-auto flex h-[calc(100svh-72.8px)] w-full max-w-[1500px] px-5 lg:px-8">
+    <div className="mx-auto flex h-[calc(100svh-72.8px)] w-full max-w-[1500px] px-0 lg:px-8">
       <div className="flex min-h-0 flex-1 flex-col gap-4 border-x border-dashed py-6">
         <div className="flex shrink-0 flex-col gap-3 px-5 lg:flex-row lg:items-end lg:justify-between lg:px-8">
           <div>

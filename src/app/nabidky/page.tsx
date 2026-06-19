@@ -51,8 +51,8 @@ export default async function ListingsPage({
   ]);
 
   return (
-    <div className="mx-auto flex h-[calc(100svh-72.8px)] w-full max-w-[1500px] px-5 lg:px-8">
-      <div className="flex min-h-0 flex-1 border-x border-dashed py-6">
+    <div className="mx-auto flex h-[calc(100svh-72.8px)] w-full max-w-[1500px] min-w-0 px-0 lg:px-8">
+      <div className="flex min-h-0 min-w-0 flex-1 border-x border-dashed py-0 lg:py-6">
         <ListingsTable
           rows={rows}
           totalCount={totalCount}

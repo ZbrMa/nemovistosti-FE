@@ -47,7 +47,7 @@ export function SeoMarketSummary({
         aria-hidden="true"
       />
       <div className="relative mx-auto flex max-w-2xl flex-col items-center gap-4 px-5 text-center">
-        <h2 className="mx-auto max-w-2xl text-xl font-bold tracking-tight text-foreground sm:text-3xl">
+        <h2 className="mx-auto max-w-2xl text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
           Denně aktualizovaný přehled realitního trhu
         </h2>
         <div className="max-w-xl space-y-4 text-sm leading-7 text-muted-foreground sm:text-base">

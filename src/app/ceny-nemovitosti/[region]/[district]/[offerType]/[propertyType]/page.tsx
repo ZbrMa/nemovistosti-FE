@@ -230,7 +230,7 @@ export default async function SeoLandingPageRoute({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(seoSchema) }}
       />
-      <div className="mx-auto w-full max-w-[1300px] px-5 lg:px-8">
+      <div className="mx-auto w-full max-w-[1300px] px-0 lg:px-8">
         <div className="border-x border-dashed">
         <section className="border-b border-dashed px-5 py-8 sm:px-16 sm:py-12">
           <div className="max-w-4xl">

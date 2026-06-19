@@ -934,7 +934,7 @@ export function RentalYieldTable({ rows }: RentalYieldTableProps) {
         <h2 className="text-xl font-semibold tracking-tight">
           Návratnost podle okresů
         </h2>
-        <p className="mt-1 text-muted-foreground">
+        <p className="text-sm lg:text-base mt-1 text-muted-foreground">
           Srovnání používá průměrnou kupní cenu, průměrný měsíční nájem a
           dopočtenou dobu návratnosti.
         </p>

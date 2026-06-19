@@ -77,12 +77,12 @@ function KpiGroupBlock({ group }: { group: KpiGroup }) {
 
   return (
     <div className="space-y-4">
-      <div className="px-5 sm:px-8 flex items-end gap-4 justify-between">
+      <div className="px-5 sm:px-8 flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
         <div>
         <h2 className="text-xl font-bold tracking-tight">{group.title}</h2>
-        <p className="mt-1 text-muted-foreground">{group.description}</p>
+        <p className="mt-1 text-sm lg:text-base text-muted-foreground">{group.description}</p>
         </div>
-          <Link href={group.title === "Prodej" ? "/prodej" : "/pronajem"} className={cn(buttonVariants({ variant: "primaryOutline", size:"xs" }),"group")}>
+          <Link href={group.title === "Prodej" ? "/prodej" : "/pronajem"} className={cn(buttonVariants({ variant: "primaryOutline", size:"xs" }),"group w-fit")}>
             {group.title === "Prodej" ? "Analýzy prodeje" : "Analýzy pronájmu"}
             <ArrowRight className="group-hover:translate-x-1 transition-transform duration-150"/>
           </Link>

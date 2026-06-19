@@ -1,4 +1,4 @@
-export function KalkulackyPageHeader() {
+export function RentalYieldPageHeader() {
   return (
     <section className="mb-8 max-w-2xl px-5 lg:px-8">
       <h1 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">

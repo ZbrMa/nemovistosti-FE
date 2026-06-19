@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Tooltip,
   TooltipContent,
@@ -17,6 +16,7 @@ import {
   formatCurrency,
   formatPricePerM2,
 } from "./market-formatters";
+import { MetricButtonCarousel } from "./metric-button-carousel";
 
 type MarketHeatmapProps = {
   rows: MarketHeatmapDistrictRow[];
@@ -82,7 +82,7 @@ export function MarketHeatmap({ rows }: MarketHeatmapProps) {
             </p>
           </div>
 
-          <ButtonGroup className="ml-auto mb-4">
+          <MetricButtonCarousel className="lg:ml-auto">
             {metrics.map((metric) => (
               <Button
                 key={metric.key}
@@ -94,59 +94,61 @@ export function MarketHeatmap({ rows }: MarketHeatmapProps) {
                 {metric.label}
               </Button>
             ))}
-          </ButtonGroup>
+          </MetricButtonCarousel>
         </div>
       </div>
 
       <div className="mt-6 border-y border-dashed bg-background">
         {rows.length > 0 ? (
           <TooltipProvider>
-            <div className="max-h-[560px] overflow-auto [scrollbar-gutter:stable]">
-              {sortedRows.map((row) => {
-                const value = row[metricKey];
-                const districtLabel = row.district ?? "Neznámý okres";
-                const formattedValue = activeMetric.format(value);
-                const numericValue = getNumericValue(value);
-                const ratio = maxValue > 0 ? numericValue / maxValue : 0;
-                const colorWeight = getBarColorWeight(ratio);
-                const width = `${Math.max(ratio * 100, numericValue > 0 ? 2 : 0)}%`;
+            <div className="overflow-auto [scrollbar-gutter:stable] lg:max-h-[560px]">
+              <div className="grid min-w-[420px] grid-cols-[max-content_minmax(8rem,1fr)_5.75rem] sm:min-w-[560px] sm:grid-cols-[max-content_minmax(14rem,1fr)_7rem] lg:min-w-[680px] lg:grid-cols-[max-content_minmax(18rem,1fr)_8rem]">
+                {sortedRows.map((row) => {
+                  const value = row[metricKey];
+                  const districtLabel = row.district ?? "Neznámý okres";
+                  const formattedValue = activeMetric.format(value);
+                  const numericValue = getNumericValue(value);
+                  const ratio = maxValue > 0 ? numericValue / maxValue : 0;
+                  const colorWeight = getBarColorWeight(ratio);
+                  const width = `${Math.max(ratio * 100, numericValue > 0 ? 2 : 0)}%`;
 
-                return (
-                  <Tooltip key={`${row.region}-${row.district}`}>
-                    <TooltipTrigger
-                      render={
-                        <div className="grid min-w-[680px] grid-cols-[minmax(10rem,14rem)_minmax(18rem,1fr)_8rem] items-center gap-2 px-3 py-0.5 transition-colors last:border-b-0 hover:bg-accent/35" />
-                      }
-                    >
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-medium">
-                          {districtLabel}
+                  return (
+                    <Tooltip key={`${row.region}-${row.district}`}>
+                      <TooltipTrigger
+                        render={
+                          <div className="grid grid-cols-subgrid col-span-3 items-center gap-4 px-3 py-0.5 transition-colors last:border-b-0 hover:bg-accent/35" />
+                        }
+                      >
+                        <div className="min-w-0">
+                          <div className="truncate text-[10px] font-medium sm:text-xs lg:text-sm">
+                            {districtLabel}
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="h-3 overflow-hidden rounded-[2px] bg-accent">
-                        <div
-                          className="h-full rounded-[2px]"
-                          style={{
-                            width,
-                            backgroundColor: `color-mix(in oklch, var(--primary-700) ${colorWeight}%, var(--background))`,
-                          }}
-                        />
-                      </div>
+                        <div className="h-3 overflow-hidden rounded-[2px] bg-accent">
+                          <div
+                            className="h-full rounded-[2px]"
+                            style={{
+                              width,
+                              backgroundColor: `color-mix(in oklch, var(--primary-700) ${colorWeight}%, var(--background))`,
+                            }}
+                          />
+                        </div>
 
-                      <div className="text-left font-mono text-sm tabular-nums text-foreground sm:text-right">
-                        {formattedValue}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <span>{districtLabel}</span>
-                      <span className="font-mono tabular-nums">
-                        {formattedValue}
-                      </span>
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })}
+                        <div className="text-left font-mono text-xs tabular-nums text-foreground sm:text-right sm:text-sm">
+                          {formattedValue}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span>{districtLabel}</span>
+                        <span className="font-mono tabular-nums">
+                          {formattedValue}
+                        </span>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
             </div>
           </TooltipProvider>
         ) : (

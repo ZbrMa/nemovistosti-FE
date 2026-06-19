@@ -7,7 +7,7 @@ const MARKET_PATHS = [
   "/",
   "/sitemap.xml",
   "/nabidky",
-  "/kalkulacky",
+  "/navratnost-pronajmu",
   "/prodej",
   "/prodej/byty",
   "/prodej/domy",

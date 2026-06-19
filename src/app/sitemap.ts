@@ -24,7 +24,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/analyzy/domy",
     "/analyzy/pozemky",
     "/analyzy/pronajmy",
-    "/kalkulacky",
+    "/navratnost-pronajmu",
     "/o-projektu",
     "/vyvoj-trhu",
   ];

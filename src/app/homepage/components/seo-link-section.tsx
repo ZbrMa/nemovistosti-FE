@@ -32,7 +32,7 @@ const linkGroups = [
       { label: "Prodej", href: "/prodej" },
       { label: "Pronájem", href: "/pronajem" },
       { label: "Seznam nabídek", href: "/nabidky" },
-      { label: "Návratnost pronájmu", href: "/kalkulacky" },
+      { label: "Návratnost pronájmu", href: "/navratnost-pronajmu" },
       { label: "O projektu", href: "/o-projektu" },
     ],
   },

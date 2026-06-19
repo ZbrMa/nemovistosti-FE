@@ -10,7 +10,7 @@ import { safeQuery } from "@/lib/api/safe-query";
 import { buildPageMetadata } from "@/lib/seo";
 
 import { getRentalMarketValues } from "./actions";
-import { KalkulackyPageHeader } from "./components/kalkulacky-page-header";
+import { RentalYieldPageHeader } from "./components/rental-yield-page-header";
 import { RentalYieldCalculator } from "./components/rental-yield-calculator";
 import { RentalYieldAreaChart } from "./components/rental-yield-area-chart";
 import { RentalYieldTable } from "./components/rental-yield-table";
@@ -23,12 +23,12 @@ export const metadata: Metadata = buildPageMetadata({
   title: "Kalkulačka návratnosti pronájmu",
   description:
     "Spočítejte orientační návratnost investice do bytu podle kupní ceny, nájmu a provozních nákladů.",
-  path: "/kalkulacky",
+  path: "/navratnost-pronajmu",
 });
 
 export const revalidate = 86400;
 
-export default async function KalkulackyPage() {
+export default async function RentalYieldPage() {
   const facets = await safeQuery(
     "rental_yield.market_facets",
     () => getMarketFacets(),
@@ -71,7 +71,7 @@ export default async function KalkulackyPage() {
 
   return (
     <div className="mx-auto w-full max-w-[1300px] space-y-16 border-x border-dashed border-border pt-8 lg:pt-12 pb-8 lg:pb-12">
-      <KalkulackyPageHeader />
+      <RentalYieldPageHeader />
 
       <RentalYieldCalculator
         options={options}

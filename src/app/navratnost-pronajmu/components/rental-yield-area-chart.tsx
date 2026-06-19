@@ -2,13 +2,6 @@
 
 import { memo, useCallback, useMemo, useState, useTransition } from "react";
 import { Download, Filter, X } from "lucide-react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts";
 
 import {
   DataTableCheckboxFilter,
@@ -16,17 +9,17 @@ import {
 } from "@/components/common";
 import { Button } from "@/components/ui/button";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart";
-import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { MarketYieldByAreaRow } from "@/types/market";
 
 import { getRentalYieldAreaRows } from "../actions";
@@ -39,14 +32,10 @@ type AreaChartRow = {
   areaBucket: string;
   areaBucketMin: number | null;
   paybackYearsDecimal: number | null;
+  avgPurchasePrice: number | null;
+  avgMonthlyRent: number | null;
+  avgAreaM2: number | null;
 };
-
-const chartConfig = {
-  paybackYearsDecimal: {
-    label: "Návratnost",
-    color: "var(--primary-500)",
-  },
-} satisfies ChartConfig;
 
 function isString(value: string | null): value is string {
   return value !== null;
@@ -102,22 +91,31 @@ function getChartData(rows: MarketYieldByAreaRow[]): AreaChartRow[] {
     {
       areaBucket: string;
       areaBucketMin: number | null;
-      values: number[];
+      paybackValues: number[];
+      purchaseValues: number[];
+      rentValues: number[];
+      areaValues: number[];
     }
   >();
 
   for (const row of rows) {
-    if (row.area_bucket === null || row.payback_years_decimal === null) {
+    if (row.area_bucket === null) {
       continue;
     }
 
     const current = buckets.get(row.area_bucket) ?? {
       areaBucket: row.area_bucket,
       areaBucketMin: row.area_bucket_min,
-      values: [],
+      paybackValues: [],
+      purchaseValues: [],
+      rentValues: [],
+      areaValues: [],
     };
 
-    current.values.push(row.payback_years_decimal);
+    pushNumber(current.paybackValues, row.payback_years_decimal);
+    pushNumber(current.purchaseValues, row.avg_purchase_price);
+    pushNumber(current.rentValues, row.avg_monthly_rent);
+    pushNumber(current.areaValues, row.avg_area_m2);
     buckets.set(row.area_bucket, current);
   }
 
@@ -126,16 +124,27 @@ function getChartData(rows: MarketYieldByAreaRow[]): AreaChartRow[] {
     .map((bucket) => ({
       areaBucket: bucket.areaBucket,
       areaBucketMin: bucket.areaBucketMin,
-      paybackYearsDecimal:
-        bucket.values.length > 0
-          ? Number(
-              (
-                bucket.values.reduce((sum, value) => sum + value, 0) /
-                bucket.values.length
-              ).toFixed(2),
-            )
-          : null,
+      paybackYearsDecimal: average(bucket.paybackValues),
+      avgPurchasePrice: average(bucket.purchaseValues),
+      avgMonthlyRent: average(bucket.rentValues),
+      avgAreaM2: average(bucket.areaValues),
     }));
+}
+
+function pushNumber(values: number[], value: number | null) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    values.push(value);
+  }
+}
+
+function average(values: number[]) {
+  if (values.length === 0) {
+    return null;
+  }
+
+  return Number(
+    (values.reduce((sum, value) => sum + value, 0) / values.length).toFixed(2),
+  );
 }
 
 function escapeCsvValue(value: string | number | null) {
@@ -234,7 +243,7 @@ const ChartFilterButton = memo(function ChartFilterButton({
         <Filter data-icon="inline-start" />
         {label}
         {isFiltered ? (
-          <span className="ml-1 rounded-full bg-primary-500 px-1.5 text-[10px] font-semibold leading-4 text-primary-foreground">
+          <span className="ml-1 rounded-full bg-primary-500 px-1.5 text-xs font-semibold leading-4 text-primary-foreground">
             {values.length}
           </span>
         ) : null}
@@ -282,7 +291,25 @@ export function RentalYieldAreaChart({ rows }: RentalYieldAreaChartProps) {
     [districtOptions, selectedDistricts],
   );
   const chartData = useMemo(() => getChartData(chartRows), [chartRows]);
-  const chartHeight = Math.max(320, chartData.length * 46 + 72);
+  const values = chartData
+    .map((row) => row.paybackYearsDecimal)
+    .filter((value): value is number => typeof value === "number");
+  const maxValue = values.length > 0 ? Math.max(...values) : 0;
+  const sortedChartData = useMemo(
+    () =>
+      [...chartData].sort((a, b) => {
+        const aValue = getNumericValue(a.paybackYearsDecimal);
+        const bValue = getNumericValue(b.paybackYearsDecimal);
+        const valueDifference = aValue - bValue;
+
+        if (valueDifference !== 0) {
+          return valueDifference;
+        }
+
+        return (a.areaBucketMin ?? 0) - (b.areaBucketMin ?? 0);
+      }),
+    [chartData],
+  );
 
   const fetchRows = useCallback(
     (regions: string[], districts: string[]) => {
@@ -334,17 +361,17 @@ export function RentalYieldAreaChart({ rows }: RentalYieldAreaChartProps) {
     selectedDistricts.length !== allDistrictOptions.length;
 
   return (
-    <section className="space-y-4 px-5 lg:px-8 border-t border-dashed pt-8 lg:pt-12">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <section className="space-y-4 border-t border-dashed pt-8 lg:pt-12">
+      <div className="flex flex-col gap-3 px-5 sm:flex-row sm:items-end sm:justify-between lg:px-8">
         <div className="max-w-2xl">
           <h2 className="text-xl font-semibold tracking-tight">
             Návratnost pronájmu bytů podle plochy
           </h2>
-          <p className="mt-1 text-muted-foreground">
+          <p className="mt-1 text-sm text-muted-foreground lg:text-base">
             Srovnání návratnosti bytů podle velikostních pásem.
           </p>
         </div>
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-wrap justify-start gap-2 sm:justify-end">
           {hasActiveFilters ? (
             <Button
               type="button"
@@ -380,64 +407,90 @@ export function RentalYieldAreaChart({ rows }: RentalYieldAreaChartProps) {
         </div>
       </div>
 
-      <div className="rounded-lg border bg-card p-4">
+      <div className="border-y border-dashed bg-background">
         {isPending ? (
-          <Skeleton className="h-[360px] w-full" />
+          <div className="p-5 lg:px-8">
+            <Skeleton className="h-[360px] w-full" />
+          </div>
         ) : chartData.length > 0 ? (
-          <ChartContainer
-            config={chartConfig}
-            className="aspect-auto w-full"
-            style={{ height: chartHeight }}
-          >
-            <BarChart
-              accessibilityLayer
-              data={chartData}
-              layout="vertical"
-              margin={{ left: 16, right: 24, top: 8, bottom: 8 }}
-            >
-              <CartesianGrid horizontal={false} />
-              <XAxis
-                type="number"
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `${value} let`}
-              />
-              <YAxis
-                dataKey="areaBucket"
-                type="category"
-                tickLine={false}
-                axisLine={false}
-                width={110}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={
-                  <ChartTooltipContent
-                    formatter={(value) => (
-                      <span className=" font-medium tabular-nums text-foreground">
-                        {Number(value).toLocaleString("cs-CZ", {
-                          maximumFractionDigits: 2,
-                        })}{" "}
-                        let
-                      </span>
-                    )}
-                  />
-                }
-              />
-              <Bar
-                dataKey="paybackYearsDecimal"
-                name="Návratnost"
-                fill="var(--color-foreground)"
-                radius={3}
-              />
-            </BarChart>
-          </ChartContainer>
+          <TooltipProvider>
+            <div className="overflow-auto [scrollbar-gutter:stable] lg:max-h-[560px]">
+              <div className="grid min-w-[420px] grid-cols-[max-content_minmax(8rem,1fr)_5.75rem] sm:min-w-[560px] sm:grid-cols-[max-content_minmax(14rem,1fr)_7rem]">
+                {sortedChartData.map((row) => {
+                  const value = row.paybackYearsDecimal;
+                  const formattedValue = formatYears(value);
+                  const numericValue = getNumericValue(value);
+                  const ratio = maxValue > 0 ? numericValue / maxValue : 0;
+                  const colorWeight = getBarColorWeight(ratio);
+                  const width = `${Math.max(ratio * 100, numericValue > 0 ? 2 : 0)}%`;
+
+                  return (
+                    <Tooltip key={row.areaBucket}>
+                      <TooltipTrigger
+                        render={
+                          <div className="grid grid-cols-subgrid col-span-3 items-center gap-4 px-3 py-0.5 transition-colors last:border-b-0 hover:bg-accent/35" />
+                        }
+                      >
+                        <div className="min-w-0">
+                          <div className="truncate text-xs font-medium">
+                            {row.areaBucket}
+                          </div>
+                        </div>
+
+                        <div className="h-3 overflow-hidden rounded-[2px] bg-accent">
+                          <div
+                            className="h-full rounded-[2px]"
+                            style={{
+                              width,
+                              backgroundColor: `color-mix(in oklch, var(--primary-700) ${colorWeight}%, var(--background))`,
+                            }}
+                          />
+                        </div>
+
+                        <div className="text-left font-mono text-xs tabular-nums text-foreground sm:text-right sm:text-sm">
+                          {formattedValue}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <span>{row.areaBucket}</span>
+                        <span className="font-mono tabular-nums">
+                          {formattedValue}
+                        </span>
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </div>
+          </TooltipProvider>
         ) : (
-          <div className="flex min-h-64 items-center justify-center text-sm text-muted-foreground">
+          <div className="flex min-h-64 items-center justify-center border border-dashed text-sm text-muted-foreground">
             Data pro vybrané filtry nejsou dostupná.
           </div>
         )}
       </div>
     </section>
   );
+}
+
+function getNumericValue(value: number | null | undefined) {
+  return typeof value === "number" ? value : 0;
+}
+
+function getBarColorWeight(ratio: number) {
+  if (ratio <= 0) {
+    return 10;
+  }
+
+  return Math.round(18 + ratio * 62);
+}
+
+function formatYears(value: number | null | undefined) {
+  if (value === null || value === undefined || !Number.isFinite(value)) {
+    return "—";
+  }
+
+  return `${new Intl.NumberFormat("cs-CZ", {
+    maximumFractionDigits: 2,
+  }).format(value)} let`;
 }

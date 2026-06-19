@@ -10,7 +10,7 @@ type HomeHeroProps = {
 
 export function HomeHero({ hasDataError }: HomeHeroProps) {
   return (
-    <section className="relative overflow-hidden border-x border-dashed border-border">
+    <section className="relative overflow-hidden border-x border-dashed border-border border-b lg:border-b-0">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 opacity-70"
@@ -27,7 +27,7 @@ export function HomeHero({ hasDataError }: HomeHeroProps) {
         }}
       />
       <div className="pointer-events-none absolute inset-0 bg-background/70" aria-hidden="true" />
-      <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-4 text-center py-12 md:py-24">
+      <div className="relative mx-auto flex max-w-4xl flex-col items-center gap-4 text-center px-3 py-12 md:py-24">
         <div className="space-y-3">
           <h1 className="mx-auto max-w-3xl text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
             Vývoj cen nemovitostí v Česku
@@ -37,7 +37,7 @@ export function HomeHero({ hasDataError }: HomeHeroProps) {
             podle měst, okresů a typu nabídky.
           </p>
         </div>
-        <div className="flex flex-col items-center justify-center gap-2 sm:flex-row">
+        <div className="flex items-center justify-center gap-2">
           <Link href="/prodej" className={cn(buttonVariants({ variant: "primaryOutline"}))}>
             Trh aktuálně
             <ArrowRight />

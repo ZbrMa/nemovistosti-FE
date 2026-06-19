@@ -19,7 +19,7 @@ const propertyTypes = [
   {
     title: "Návratnost pronájmu",
     description: "Porovnání výnosnosti a návratnosti podle lokality a dispozice.",
-    href: "/kalkulacky",
+    href: "/navratnost-pronajmu",
     icon: Calculator,
   },
   {
@@ -56,7 +56,7 @@ const propertyTypes = [
 
 export function PropertyTypeSection() {
   return (
-    <section className="pb-8 sm:pb-12">
+    <section className="pb-8 sm:pb-12 mb-0 lg:mb-12">
       <div className="mb-8 max-w-2xl px-5 sm:px-8">
         <h2 className="text-xl font-bold tracking-tight">Rozcestník</h2>
         <p className="mt-1 text-muted-foreground">

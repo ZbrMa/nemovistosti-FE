@@ -4,7 +4,6 @@ import { useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 
 import { Button } from "@/components/ui/button";
-import { ButtonGroup } from "@/components/ui/button-group";
 import {
   ChartContainer,
   ChartTooltip,
@@ -19,12 +18,18 @@ import {
   formatPricePerM2,
   formatShortMonth,
 } from "./market-formatters";
+import { MetricButtonCarousel } from "./metric-button-carousel";
 
 type MarketTimeseriesChartProps = {
   points: MarketTimeseriesPoint[];
 };
 
 type TimeseriesMetricKey = "listings_count" | "avg_price" | "avg_price_per_m2";
+
+type ChartPoint = {
+  period: string;
+  value: number | null;
+};
 
 const metricOptions: Array<{
   key: TimeseriesMetricKey;
@@ -54,15 +59,15 @@ export function MarketTimeseriesChart({
     useState<TimeseriesMetricKey>("listings_count");
   const activeMetric =
     metricOptions.find((metric) => metric.key === metricKey) ?? metricOptions[0];
-  const data = useMemo(
+  const data: ChartPoint[] = useMemo(
     () =>
       points.map((point) => ({
         period: point.period,
-        label: formatShortMonth(point.period),
         value: point[metricKey],
       })),
     [metricKey, points],
   );
+  const ticks = useMemo(() => getTimelineTicks(data), [data]);
   const hasData = data.some((point) => typeof point.value === "number");
 
   return (
@@ -76,7 +81,7 @@ export function MarketTimeseriesChart({
             </p>
           </div>
 
-          <ButtonGroup className="ml-auto mb-4">
+          <MetricButtonCarousel className="lg:ml-auto">
             {metricOptions.map((metric) => (
               <Button
                 key={metric.key}
@@ -88,7 +93,7 @@ export function MarketTimeseriesChart({
                 {metric.label}
               </Button>
             ))}
-          </ButtonGroup>
+          </MetricButtonCarousel>
         </div>
       </div>
 
@@ -105,10 +110,13 @@ export function MarketTimeseriesChart({
             >
               <CartesianGrid vertical={false} />
               <XAxis
-                dataKey="label"
+                dataKey="period"
+                ticks={ticks}
                 tickLine={false}
                 axisLine={false}
+                interval="preserveStartEnd"
                 minTickGap={18}
+                tickFormatter={formatTimelineTick}
               />
               <YAxis
                 tickLine={false}
@@ -132,7 +140,7 @@ export function MarketTimeseriesChart({
                 }
               />
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="value"
                 name={activeMetric.label}
                 stroke="var(--color-value)"
@@ -166,4 +174,74 @@ function formatAxisValue(value: number, metricKey: TimeseriesMetricKey) {
   }
 
   return String(value);
+}
+
+function getTimelineTicks(data: ChartPoint[]) {
+  const periods = data.map((point) => point.period);
+
+  if (periods.length <= 14) {
+    return periods;
+  }
+
+  const ticks: string[] = [];
+  const seenMonths = new Set<string>();
+
+  periods.forEach((period, index) => {
+    const date = parsePeriodDate(period);
+
+    if (!date) {
+      return;
+    }
+
+    if (periods.length <= 90) {
+      if (index === 0 || index === periods.length - 1 || index % 7 === 0) {
+        ticks.push(period);
+      }
+
+      return;
+    }
+
+    const monthKey = `${date.getFullYear()}-${date.getMonth()}`;
+
+    if (!seenMonths.has(monthKey)) {
+      seenMonths.add(monthKey);
+      ticks.push(period);
+    }
+  });
+
+  const lastPeriod = periods[periods.length - 1];
+
+  if (lastPeriod && !ticks.includes(lastPeriod)) {
+    ticks.push(lastPeriod);
+  }
+
+  return ticks.length > 0 ? ticks : periods;
+}
+
+function formatTimelineTick(value: string) {
+  const date = parsePeriodDate(value);
+
+  if (!date) {
+    return formatShortMonth(value);
+  }
+
+  return new Intl.DateTimeFormat("cs-CZ", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
+
+function parsePeriodDate(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+
+  if (match) {
+    const [, year, month, day] = match;
+    const date = new Date(Number(year), Number(month) - 1, Number(day));
+
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
 }

@@ -67,7 +67,7 @@ export function RentalYieldForm({
     <section className="space-y-6 border-b border-dashed p-5 sm:p-6 lg:border-b-0 lg:border-r lg:p-8">
 
       <div className="max-w-2xl space-y-6">
-        <div className="space-y-2 max-w-[calc(50%)]">
+        <div className="space-y-2 sm:max-w-[calc(50%)]">
           <Label htmlFor="rental-location">Lokalita</Label>
           <LocationCombobox
             id="rental-location"
@@ -81,7 +81,7 @@ export function RentalYieldForm({
           />
         </div>
 
-        <div className="space-y-2 max-w-[calc(50%)]">
+        <div className="space-y-2 sm:max-w-[calc(50%)]">
           <Label htmlFor="rental-disposition">Dispozice</Label>
           <Select
             value={selectedDisposition}
@@ -143,7 +143,7 @@ export function RentalYieldForm({
           />
         </div>
 
-        <div className="space-y-2 max-w-[calc(50%)]">
+        <div className="space-y-2 sm:max-w-[calc(50%)]">
           <Label htmlFor="annual-costs">Roční náklady</Label>
           <Input
             id="annual-costs"
@@ -170,9 +170,9 @@ function InputWithReference({
   isLoading: boolean;
 }) {
   return (
-    <div className="grid gap-8 sm:gap-0 sm:grid-cols-2 sm:items-center">
+    <div className="grid gap-4 sm:gap-0 sm:grid-cols-2 sm:items-center">
       {input}
-      <div className="text-xs text-muted-foreground flex gap-1 items-center ml-16">
+      <div className="text-xs text-muted-foreground flex gap-1 items-center lg:ml-16">
         {isLoading ? (
           <Skeleton className="h-9.5 w-32" />
         ) : (

@@ -1,4 +1,4 @@
-import { getRegionGroups } from "@/app/kalkulacky/rental-yield-utils";
+import { getRegionGroups } from "@/app/navratnost-pronajmu/rental-yield-utils";
 import { MarketActivitySummary } from "@/features/market-overview/market-activity-summary";
 import { MarketDistribution } from "@/features/market-overview/market-distribution";
 import { MarketFilters } from "@/features/market-overview/market-filters";
@@ -77,7 +77,7 @@ export async function MarketOverviewPage({
     : "Přehled trhu nemovitostí";
 
   return (
-    <div className="mx-auto w-full max-w-[1300px] px-5 lg:px-8">
+    <div className="mx-auto w-full max-w-[1300px] px-0 lg:px-8">
       <div className="border-x border-dashed">
         <section>
           <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch lg:justify-between">

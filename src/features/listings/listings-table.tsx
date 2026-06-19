@@ -11,6 +11,7 @@ import {
 } from "@/components/common";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Pagination,
   PaginationContent,
@@ -20,13 +21,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -74,6 +68,7 @@ type SortKey =
   | "offer_type"
   | "disposition"
   | "area_m2"
+  | "first_seen_at"
   | "latest_price"
   | "price_change_amount"
   | "price_change_percent"
@@ -87,12 +82,6 @@ type SortState = {
   direction: SortDirection;
 };
 
-type PriceChangeSortPreset =
-  | "discount_amount"
-  | "increase_amount"
-  | "discount_percent"
-  | "increase_percent";
-
 type PriceChangeFilterValue = "changed_down" | "changed_up" | "neutral";
 
 type FilterState = {
@@ -104,6 +93,8 @@ type FilterState = {
   dispositions: string[];
   areaMin: string;
   areaMax: string;
+  firstSeenFrom: string;
+  firstSeenTo: string;
   priceMin: string;
   priceMax: string;
   priceChangeDirections: PriceChangeFilterValue[];
@@ -118,33 +109,6 @@ const PRICE_CHANGE_DIRECTION_OPTIONS: Array<{
   { value: "changed_down", label: "Zlevněno" },
   { value: "changed_up", label: "Zdraženo" },
   { value: "neutral", label: "Beze změny" },
-];
-
-const PRICE_CHANGE_SORT_OPTIONS: Array<{
-  value: PriceChangeSortPreset;
-  label: string;
-  sort: SortState;
-}> = [
-  {
-    value: "discount_amount",
-    label: "Největší zlevnění",
-    sort: { key: "price_change_amount", direction: "asc" },
-  },
-  {
-    value: "increase_amount",
-    label: "Největší zdražení",
-    sort: { key: "price_change_amount", direction: "desc" },
-  },
-  {
-    value: "discount_percent",
-    label: "Největší procentuální zlevnění",
-    sort: { key: "price_change_percent", direction: "asc" },
-  },
-  {
-    value: "increase_percent",
-    label: "Největší procentuální zdražení",
-    sort: { key: "price_change_percent", direction: "desc" },
-  },
 ];
 
 export function ListingsTable({
@@ -171,7 +135,6 @@ export function ListingsTable({
     key: "latest_price",
     direction: "desc",
   });
-  const activePriceChangeSortPreset = getPriceChangeSortPreset(sort);
 
   const hasActiveFilters = useMemo(
     () => hasFilters(filters, filterOptions),
@@ -231,21 +194,6 @@ export function ListingsTable({
     fetchRows(filters, nextSort, 0);
   }
 
-  function handlePriceChangeSortPreset(value: string | null) {
-    if (!value) {
-      return;
-    }
-
-    const option = PRICE_CHANGE_SORT_OPTIONS.find((item) => item.value === value);
-
-    if (!option) {
-      return;
-    }
-
-    setSort(option.sort);
-    fetchRows(filters, option.sort, 0);
-  }
-
   function applyFilterPatch(values: Partial<FilterState>) {
     const nextFilters = {
       ...filters,
@@ -275,8 +223,8 @@ export function ListingsTable({
   }
 
   return (
-    <section className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex shrink-0 flex-col gap-3 px-5 lg:flex-row lg:items-end lg:justify-between lg:px-8">
+    <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 py-4 lg:py-0">
+      <div className="flex shrink-0 flex-col gap-3 px-4 sm:px-5 lg:flex-row lg:items-end lg:justify-between lg:px-8">
         <div className="max-w-3xl">
           <h2 className="text-xl font-semibold tracking-tight">
             Seznam nabídek
@@ -287,22 +235,7 @@ export function ListingsTable({
           </p>
         </div>
 
-        <div className="flex items-center justify-end gap-2">
-          <Select
-            value={activePriceChangeSortPreset ?? ""}
-            onValueChange={handlePriceChangeSortPreset}
-          >
-            <SelectTrigger size="sm" className="h-7">
-              <SelectValue placeholder="Řazení změny ceny" />
-            </SelectTrigger>
-            <SelectContent align="end">
-              {PRICE_CHANGE_SORT_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
           {hasActiveFilters ? (
             <Button
               type="button"
@@ -328,10 +261,13 @@ export function ListingsTable({
       </div>
 
       <div
-        className="flex min-h-0 flex-1 overflow-hidden border-y border-dashed"
+        className="flex min-h-0 min-w-0 flex-1 overflow-hidden border-y border-dashed"
         aria-busy={isPending}
       >
-        <Table containerClassName="min-h-full flex-1 overflow-auto [scrollbar-gutter:stable]">
+        <Table
+          className="min-w-[1220px]"
+          containerClassName="min-h-full min-w-0 flex-1 overflow-auto [scrollbar-gutter:stable]"
+        >
           <TableHeader>
             <TableRow className="border-b-0">
               <FilterHead
@@ -450,6 +386,20 @@ export function ListingsTable({
                   applyFilterPatch({ areaMin: "", areaMax: "" });
                 }}
               />
+              <DateHead
+                label="První zmínka"
+                sortKey="first_seen_at"
+                sort={sort}
+                from={filters.firstSeenFrom}
+                to={filters.firstSeenTo}
+                onSort={handleSort}
+                onFromChange={(value) => updateFilter("firstSeenFrom", value)}
+                onToChange={(value) => updateFilter("firstSeenTo", value)}
+                onApply={() => fetchRows(filters, sort, 0)}
+                onClear={() => {
+                  applyFilterPatch({ firstSeenFrom: "", firstSeenTo: "" });
+                }}
+              />
               <NumberHead
                 label="Cena"
                 sortKey="latest_price"
@@ -516,7 +466,7 @@ export function ListingsTable({
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={11}
+                  colSpan={12}
                   className="h-[calc(100svh-22rem)] text-center text-muted-foreground"
                 >
                   Data pro vybrané filtry nejsou dostupná.
@@ -526,12 +476,12 @@ export function ListingsTable({
           </TableBody>
         </Table>
       </div>
-      <div className="flex shrink-0 items-center justify-between px-5 text-sm text-muted-foreground lg:px-8">
-        <span>
+      <div className="flex shrink-0 flex-col gap-3 px-4 text-sm text-muted-foreground sm:px-5 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <span className="min-w-0">
           {pageStart}–{pageEnd} z {formatInteger(totalCount)} záznamů
           {isPending ? " · načítám…" : null}
         </span>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center">
           <ListingsPagination
             pageIndex={pageIndex}
             pageCount={pageCount}
@@ -564,6 +514,9 @@ function ListingRow({ row }: { row: ListingSearchRow }) {
       </TableCell>
       <TableCell className="py-1">{formatNullable(row.disposition)}</TableCell>
       <NumberCell>{formatArea(row.area_m2)}</NumberCell>
+      <TableCell className="py-1 tabular-nums">
+        <FirstSeenAtValue value={row.first_seen_at} />
+      </TableCell>
       <NumberCell>{formatCurrency(row.latest_price)}</NumberCell>
       <NumberCell>{formatPricePerM2(row.latest_price_per_m2)}</NumberCell>
       <TableCell className="py-1">
@@ -633,6 +586,22 @@ function PriceChangeBadge({
   );
 }
 
+function FirstSeenAtValue({ value }: { value: string | null | undefined }) {
+  const formattedDate = formatDate(value);
+  const ageLabel = formatDateAge(value);
+
+  if (!ageLabel) {
+    return formattedDate;
+  }
+
+  return (
+    <>
+      {formattedDate}{" "}
+      <span className="text-muted-foreground">({ageLabel})</span>
+    </>
+  );
+}
+
 function ListingsPagination({
   pageIndex,
   pageCount,
@@ -649,7 +618,7 @@ function ListingsPagination({
   const pageItems = getPaginationItems(pageIndex, pageCount);
 
   return (
-    <Pagination className="mx-0 w-auto justify-end">
+    <Pagination className="mx-0 w-auto max-w-full justify-start lg:justify-end">
       <PaginationContent className="gap-1">
         <PaginationItem>
           <PaginationPrevious
@@ -823,6 +792,135 @@ function NumberHead({
   );
 }
 
+function DateHead({
+  label,
+  sortKey,
+  sort,
+  from,
+  to,
+  onSort,
+  onFromChange,
+  onToChange,
+  onApply,
+  onClear,
+}: {
+  label: string;
+  sortKey: SortKey;
+  sort: SortState;
+  from: string;
+  to: string;
+  onSort: (key: SortKey) => void;
+  onFromChange: (value: string) => void;
+  onToChange: (value: string) => void;
+  onApply: () => void;
+  onClear: () => void;
+}) {
+  const isFiltered = from.trim().length > 0 || to.trim().length > 0;
+
+  return (
+    <TableHead>
+      <DataTableHeaderCell
+        label={label}
+        sortKey={sortKey}
+        sort={[sort]}
+        isFiltered={isFiltered}
+        filterCount={isFiltered ? 1 : undefined}
+        onSort={(key) => onSort(key as SortKey)}
+      >
+        <DataTableDateRangeFilter
+          label={`Filtrovat ${label.toLowerCase()}`}
+          from={from}
+          to={to}
+          onFromChange={onFromChange}
+          onToChange={onToChange}
+          onApply={onApply}
+          onClear={onClear}
+        />
+      </DataTableHeaderCell>
+    </TableHead>
+  );
+}
+
+function DataTableDateRangeFilter({
+  label,
+  from,
+  to,
+  onFromChange,
+  onToChange,
+  onApply,
+  onClear,
+  onClose,
+}: {
+  label: string;
+  from: string;
+  to: string;
+  onFromChange: (value: string) => void;
+  onToChange: (value: string) => void;
+  onApply: () => void;
+  onClear: () => void;
+  onClose?: () => void;
+}) {
+  const isClearDisabled = from.trim().length === 0 && to.trim().length === 0;
+
+  function applyFilter() {
+    onApply();
+    onClose?.();
+  }
+
+  function clearFilter() {
+    onClear();
+    onClose?.();
+  }
+
+  return (
+    <div className="flex flex-col">
+      <div className="flex items-center justify-between gap-3 border-b p-3">
+        <p className="text-sm font-medium">{label}</p>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          className="text-muted-foreground hover:text-foreground"
+          onClick={onClose}
+          aria-label="Zavřít filtr"
+        >
+          <X />
+        </Button>
+      </div>
+      <div className="grid grid-cols-2 gap-2 p-3">
+        <Input
+          type="date"
+          className="h-8"
+          value={from}
+          aria-label="Datum od"
+          onChange={(event) => onFromChange(event.target.value)}
+        />
+        <Input
+          type="date"
+          className="h-8"
+          value={to}
+          aria-label="Datum do"
+          onChange={(event) => onToChange(event.target.value)}
+        />
+      </div>
+      <div className="flex justify-end gap-2 border-t p-3">
+        <Button
+          type="button"
+          variant="ghost"
+          size="xs"
+          disabled={isClearDisabled}
+          onClick={clearFilter}
+        >
+          Vymazat filtr
+        </Button>
+        <Button type="button" variant="primary" size="xs" onClick={applyFilter}>
+          Potvrdit filtr
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 type FilterOptions = {
   regionOptions: DataTableFilterOption[];
   districtOptions: DataTableFilterOption[];
@@ -887,6 +985,8 @@ function getInitialFilters(
     dispositions: options.dispositionOptions.map((option) => option.value),
     areaMin: "",
     areaMax: "",
+    firstSeenFrom: "",
+    firstSeenTo: "",
     priceMin: "",
     priceMax: "",
     priceChangeDirections: getInitialPriceChangeFilters(
@@ -973,6 +1073,12 @@ function getListingSearchInput(
     options.dispositionOptions,
   );
   addRangeFilters(p_filters, "area_m2", filters.areaMin, filters.areaMax);
+  addDateRangeFilters(
+    p_filters,
+    "first_seen_at",
+    filters.firstSeenFrom,
+    filters.firstSeenTo,
+  );
   addRangeFilters(
     p_filters,
     "latest_price",
@@ -1037,6 +1143,32 @@ function addRangeFilters(
       column,
       op: "lte",
       value: maxValue,
+    });
+  }
+}
+
+function addDateRangeFilters(
+  filters: ListingSearchFilter[],
+  column: ListingSearchFilter["column"],
+  from: string,
+  to: string,
+) {
+  const fromValue = toStartOfDayIso(from);
+  const toValue = toNextDayIso(to);
+
+  if (fromValue) {
+    filters.push({
+      column,
+      op: "gte",
+      value: fromValue,
+    });
+  }
+
+  if (toValue) {
+    filters.push({
+      column,
+      op: "lt",
+      value: toValue,
     });
   }
 }
@@ -1142,6 +1274,8 @@ function hasFilters(filters: FilterState, options: FilterOptions) {
     filters.dispositions.length !== options.dispositionOptions.length ||
     filters.areaMin.trim().length > 0 ||
     filters.areaMax.trim().length > 0 ||
+    filters.firstSeenFrom.trim().length > 0 ||
+    filters.firstSeenTo.trim().length > 0 ||
     filters.priceMin.trim().length > 0 ||
     filters.priceMax.trim().length > 0 ||
     filters.priceChangeDirections.length !==
@@ -1161,21 +1295,45 @@ function parseNumber(value: string) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function parseDateInput(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+
+  if (!match) {
+    return null;
+  }
+
+  const [, year, month, day] = match;
+  const date = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day)));
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function toStartOfDayIso(value: string) {
+  return parseDateInput(value)?.toISOString() ?? null;
+}
+
+function toNextDayIso(value: string) {
+  const date = parseDateInput(value);
+
+  if (!date) {
+    return null;
+  }
+
+  date.setUTCDate(date.getUTCDate() + 1);
+
+  return date.toISOString();
+}
+
 function getDefaultDirection(key: SortKey): SortDirection {
   if (key === "price_change_amount" || key === "price_change_percent") {
     return "asc";
   }
 
-  return isNumericSort(key) ? "desc" : "asc";
-}
+  if (key === "first_seen_at") {
+    return "desc";
+  }
 
-function getPriceChangeSortPreset(sort: SortState) {
-  return (
-    PRICE_CHANGE_SORT_OPTIONS.find(
-      (option) =>
-        option.sort.key === sort.key && option.sort.direction === sort.direction,
-    )?.value ?? null
-  );
+  return isNumericSort(key) ? "desc" : "asc";
 }
 
 function isNumericSort(key: SortKey) {
@@ -1190,6 +1348,54 @@ function isNumericSort(key: SortKey) {
 
 function formatNullable(value: string | null | undefined) {
   return value ?? "—";
+}
+
+function formatDate(value: string | null | undefined) {
+  if (!value) {
+    return "—";
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return value;
+  }
+
+  return new Intl.DateTimeFormat("cs-CZ", {
+    day: "numeric",
+    month: "numeric",
+    year: "numeric",
+  }).format(date);
+}
+
+function formatDateAge(value: string | null | undefined) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+
+  const today = new Date();
+  const startOfToday = Date.UTC(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate(),
+  );
+  const startOfDate = Date.UTC(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+  );
+  const dayCount = Math.max(
+    0,
+    Math.floor((startOfToday - startOfDate) / 86_400_000),
+  );
+
+  return `${formatInteger(dayCount)} dnů`;
 }
 
 function formatInteger(value: number) {

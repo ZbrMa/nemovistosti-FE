@@ -7,7 +7,7 @@ const quickLinks = [
   { title: "Domy na prodej", href: "/prodej/domy" },
   { title: "Pozemky na prodej", href: "/prodej/pozemky" },
   { title: "Seznam nabídek", href: "/nabidky" },
-  { title: "Návratnost pronájmu", href: "/kalkulacky" },
+  { title: "Návratnost pronájmu", href: "/navratnost-pronajmu" },
 ] as const;
 
 export function QuickMarketLinks() {
