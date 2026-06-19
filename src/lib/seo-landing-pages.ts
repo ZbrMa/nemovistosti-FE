@@ -60,7 +60,7 @@ export function buildSeoLandingHeadline(
 export function buildSeoLandingMetaTitle(
   page: Pick<SeoLandingPage, "district" | "offer_type" | "property_type">,
 ) {
-  return `Ceny ${getSeoPropertyTypeGenitive(page.property_type as Exclude<PropertyType, "other">)} ${getSeoOfferTypeLabel(page.offer_type as OfferType)} v okrese ${page.district} | ${SITE_NAME}`;
+  return `Ceny ${getSeoPropertyTypeGenitive(page.property_type as Exclude<PropertyType, "other">)} ${getSeoOfferTypeLabel(page.offer_type as OfferType)} v okrese ${page.district}`;
 }
 
 export function buildSeoLandingDescription(overview: MarketOverview | null) {
