@@ -4,7 +4,7 @@ import { MarketOverviewPage } from "@/features/market-overview/market-overview-p
 import { OFFER_TYPE, PROPERTY_TYPE } from "@/lib/market-taxonomy";
 
 export const metadata: Metadata = {
-  title: "Byty k pronájmu aktuálně | Ceny nemovitostí",
+  title: "Byty k pronájmu aktuálně",
   description:
     "Aktuální analytický přehled trhu bytů k pronájmu v Česku. Ceny, aktivita trhu, regionální srovnání a vývoj nabídek.",
 };

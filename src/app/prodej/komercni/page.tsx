@@ -4,7 +4,7 @@ import { MarketOverviewPage } from "@/features/market-overview/market-overview-p
 import { OFFER_TYPE, PROPERTY_TYPE } from "@/lib/market-taxonomy";
 
 export const metadata: Metadata = {
-  title: "Komerční nemovitosti na prodej aktuálně | Ceny nemovitostí",
+  title: "Komerční nemovitosti na prodej aktuálně",
   description:
     "Aktuální analytický přehled trhu komerčních nemovitostí na prodej v Česku. Ceny, aktivita trhu, regionální srovnání a vývoj nabídek.",
 };
