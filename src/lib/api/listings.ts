@@ -17,6 +17,7 @@ import {
 } from "./utils";
 
 const LISTINGS_DATA_REVALIDATE_SECONDS = 86400;
+export const LISTINGS_DATA_CACHE_TAG = "listings-data";
 
 const cachedListingsRpc = unstable_cache(
   async (functionName: string, params: Record<string, unknown>) => {
@@ -35,7 +36,10 @@ const cachedListingsRpc = unstable_cache(
     return data;
   },
   ["listings-rpc"],
-  { revalidate: LISTINGS_DATA_REVALIDATE_SECONDS },
+  {
+    revalidate: LISTINGS_DATA_REVALIDATE_SECONDS,
+    tags: [LISTINGS_DATA_CACHE_TAG],
+  },
 );
 
 export async function getListingPriceHistory(
