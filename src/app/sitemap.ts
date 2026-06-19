@@ -35,13 +35,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticRoutes.map((route) => ({
       url: toAbsoluteUrl(route),
       changeFrequency: "daily" as const,
-      priority: route === "/" ? 1 : 0.7,
+      priority: route === "/" ? 1 : 0.9,
     })),
     ...seoLandingPages.map((page) => ({
       url: toAbsoluteUrl(page.slug),
       lastModified: page.updated_at,
       changeFrequency: "daily" as const,
-      priority: 0.8,
+      priority: 0.7,
     })),
   ];
 }
