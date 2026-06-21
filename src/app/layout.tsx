@@ -6,6 +6,8 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { SITE_NAME } from "@/lib/seo";
 import { getSiteUrl } from "@/lib/site-url";
 
+import { Analytics } from "@vercel/analytics/next"
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -74,7 +76,7 @@ export default function RootLayout({
         <main className="min-h-[calc(100vh-72.8px)] bg-background">
           {children}
         </main>
-        
+        <Analytics/>
       </body>
     </html>
   );
