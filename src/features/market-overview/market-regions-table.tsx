@@ -69,7 +69,7 @@ export function MarketRegionsTable({ rows }: MarketRegionsTableProps) {
     <section className="pb-8 sm:pb-12">
       <div className="px-5 sm:px-16">
         <h2 className="text-xl font-semibold tracking-tight">
-          Regionální srovnání
+          Srovnání krajů
         </h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Porovnání krajů podle objemu, aktivity a nabídkových cen.

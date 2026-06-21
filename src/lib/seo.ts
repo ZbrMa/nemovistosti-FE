@@ -17,7 +17,7 @@ export function buildPageMetadata({
     title,
     description,
     alternates: {
-      canonical: path,
+      canonical: toAbsoluteUrl(path),
     },
     openGraph: {
       title,
