@@ -1,6 +1,13 @@
 "use client";
 
-import { useMemo, useState, useTransition, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+} from "react";
 import { ChevronDown, ChevronUp, Download, Equal, ExternalLink, X } from "lucide-react";
 
 import {
@@ -30,6 +37,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
   getOfferTypeLabel,
   getPropertyTypeBadgeClassName,
   getPropertyTypeLabel,
@@ -49,6 +62,7 @@ import {
   formatCurrency,
   formatPricePerM2,
 } from "../market-overview/market-formatters";
+import { Spinner } from "@/components/ui/spinner";
 
 type ListingsTableProps = {
   rows: ListingSearchRow[];
@@ -117,6 +131,10 @@ const PRICE_CHANGE_DIRECTION_OPTIONS: Array<{
   { value: "neutral", label: "Beze změny" },
 ];
 
+type ExportRun = {
+  cancelled: boolean;
+};
+
 export function ListingsTable({
   rows,
   totalCount: initialTotalCount,
@@ -130,6 +148,7 @@ export function ListingsTable({
   const [isExporting, setIsExporting] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportProgress, setExportProgress] = useState(0);
+  const activeExportRef = useRef<ExportRun | null>(null);
   const filterOptions = useMemo(
     () => getFilterOptions(rows, facets),
     [facets, rows],
@@ -140,7 +159,7 @@ export function ListingsTable({
   );
   const [filters, setFilters] = useState<FilterState>(() => initialFilters);
   const [sort, setSort] = useState<SortState>({
-    key: "latest_price",
+    key: "first_seen_at",
     direction: "desc",
   });
 
@@ -152,6 +171,23 @@ export function ListingsTable({
   const hasNextPage = pageIndex + 1 < pageCount;
   const pageStart = totalCount === 0 ? 0 : pageIndex * PAGE_SIZE + 1;
   const pageEnd = Math.min((pageIndex + 1) * PAGE_SIZE, totalCount);
+
+  useEffect(() => {
+    function cancelActiveExport() {
+      if (activeExportRef.current) {
+        activeExportRef.current.cancelled = true;
+      }
+    }
+
+    window.addEventListener("pagehide", cancelActiveExport);
+    window.addEventListener("beforeunload", cancelActiveExport);
+
+    return () => {
+      cancelActiveExport();
+      window.removeEventListener("pagehide", cancelActiveExport);
+      window.removeEventListener("beforeunload", cancelActiveExport);
+    };
+  }, []);
 
   function updateFilter<K extends keyof FilterState>(
     key: K,
@@ -217,12 +253,20 @@ export function ListingsTable({
   }
 
   async function handleExport() {
+    const exportRun: ExportRun = { cancelled: false };
+
+    activeExportRef.current = exportRun;
     setIsExporting(true);
     setExportError(null);
     setExportProgress(0);
 
     try {
       const ExcelJS = await import("exceljs");
+
+      if (exportRun.cancelled) {
+        return;
+      }
+
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("Nabídky");
       const exportInput = getListingExportInput(filters, filterOptions);
@@ -239,6 +283,10 @@ export function ListingsTable({
           p_limit: EXPORT_BATCH_SIZE,
           p_offset: offset,
         });
+
+        if (exportRun.cancelled) {
+          return;
+        }
 
         appendListingRowsToWorksheet(worksheet, batchRows);
 
@@ -264,16 +312,30 @@ export function ListingsTable({
 
       const buffer = await workbook.xlsx.writeBuffer();
 
+      if (exportRun.cancelled) {
+        return;
+      }
+
       downloadWorkbookBuffer(buffer as BlobPart, "nabidky.xlsx");
       setExportProgress(100);
     } catch (error) {
+      if (exportRun.cancelled) {
+        return;
+      }
+
       console.error(error);
       setExportError(
         "Export se nepodařilo dokončit. Zkuste prosím upravit filtry nebo export spustit znovu.",
       );
     } finally {
-      setIsExporting(false);
-      setExportProgress(0);
+      if (activeExportRef.current === exportRun) {
+        activeExportRef.current = null;
+      }
+
+      if (!exportRun.cancelled) {
+        setIsExporting(false);
+        setExportProgress(0);
+      }
     }
   }
 
@@ -318,7 +380,7 @@ export function ListingsTable({
               />
             ) : null}
             <span className="relative z-10 inline-flex items-center gap-1.5">
-              <Download data-icon="inline-start" />
+              {isExporting ? <Spinner/> :<Download data-icon="inline-start" />}
               Export do Excelu
             </span>
           </Button>
@@ -641,11 +703,29 @@ function PriceChangeBadge({
   );
 
   if (normalizedDirection === "decreased") {
-    return <ChevronDown className="text-primary" aria-label="Zlevněno" />;
+    return (
+      <PriceChangeTooltip
+        label="Zlevněno"
+        amount={amount}
+        percent={percent}
+        previousPrice={previousPrice}
+      >
+        <ChevronDown className="text-primary" aria-label="Zlevněno" />
+      </PriceChangeTooltip>
+    );
   }
 
   if (normalizedDirection === "increased") {
-    return <ChevronUp className="text-destructive" aria-label="Zdraženo" />;
+    return (
+      <PriceChangeTooltip
+        label="Zdraženo"
+        amount={amount}
+        percent={percent}
+        previousPrice={previousPrice}
+      >
+        <ChevronUp className="text-destructive" aria-label="Zdraženo" />
+      </PriceChangeTooltip>
+    );
   }
 
   return (
@@ -653,6 +733,44 @@ function PriceChangeBadge({
       className="text-muted"
       aria-label="Beze změny"
     />
+  );
+}
+
+function PriceChangeTooltip({
+  label,
+  amount,
+  percent,
+  previousPrice,
+  children,
+}: {
+  label: string;
+  amount: number | null | undefined;
+  percent: number | null | undefined;
+  previousPrice: number | null | undefined;
+  children: ReactNode;
+}) {
+  const tooltipLines = formatPriceChangeTooltipLines(
+    label,
+    amount,
+    percent,
+    previousPrice,
+  );
+
+  return (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger render={<span className="inline-flex" />}>
+          {children}
+        </TooltipTrigger>
+        <TooltipContent className="items-start">
+          <span className="flex flex-col gap-0.5">
+            {tooltipLines.map((line) => (
+              <span key={line}>{line}</span>
+            ))}
+          </span>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -1488,6 +1606,63 @@ function formatDateAge(value: string | null | undefined) {
 
 function formatInteger(value: number) {
   return new Intl.NumberFormat("cs-CZ").format(value);
+}
+
+function formatSignedCurrency(value: number | null | undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+
+  const formatted = new Intl.NumberFormat("cs-CZ", {
+    style: "currency",
+    currency: "CZK",
+    maximumFractionDigits: 0,
+    signDisplay: "always",
+  }).format(value);
+
+  return formatted;
+}
+
+function formatSignedPercent(value: number | null | undefined) {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return null;
+  }
+
+  const formatted = new Intl.NumberFormat("cs-CZ", {
+    maximumFractionDigits: 1,
+    signDisplay: "always",
+  }).format(value);
+
+  return `${formatted} %`;
+}
+
+function formatPriceChangeTooltipLines(
+  label: string,
+  amount: number | null | undefined,
+  percent: number | null | undefined,
+  previousPrice: number | null | undefined,
+) {
+  const lines = [label];
+  const amountText = formatSignedCurrency(amount);
+  const percentText = formatSignedPercent(percent);
+  const previousPriceText =
+    typeof previousPrice === "number" && Number.isFinite(previousPrice)
+      ? `původně ${formatCurrency(previousPrice)}`
+      : null;
+
+  if (amountText) {
+    lines.push(amountText);
+  }
+
+  if (percentText) {
+    lines.push(percentText);
+  }
+
+  if (previousPriceText) {
+    lines.push(previousPriceText);
+  }
+
+  return lines;
 }
 
 function formatArea(value: number | null | undefined) {
