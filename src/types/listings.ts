@@ -32,6 +32,8 @@ export type ListingSearchCountInput = {
 
 export type ListingExportInput = {
   p_filters?: ListingSearchFilter[];
+  p_limit?: number;
+  p_offset?: number;
 };
 
 export type ListingSearchFilter = {

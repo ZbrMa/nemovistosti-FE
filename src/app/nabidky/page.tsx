@@ -34,7 +34,7 @@ export default async function ListingsPage({
     p_filters: getInitialListingFilters(initialCriteria),
     p_limit: 100,
     p_offset: 0,
-    p_sorts: [{ column: "latest_price", dir: "desc", nulls: "last" }],
+    p_sorts: [{ column: "first_seen_at", dir: "desc", nulls: "last" }],
   };
   const [rows, totalCount, facets] = await Promise.all([
     safeQuery(

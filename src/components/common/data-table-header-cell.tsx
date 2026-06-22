@@ -56,13 +56,13 @@ function DataTableSortButtonComponent({
       variant="link"
       size="xs"
       className={cn(
-        "relative p-0 no-underline hover:no-underline text-foreground",
+        "relative p-0 no-underline hover:no-underline text-foreground group",
         align === "right" && "ml-auto",
       )}
       onClick={() => onSort(sortKey)}
     >
       <span className="truncate">{label}</span>
-      <Icon className={cn("size-3.5",isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground")} />
+      <Icon className={cn("size-3.5",isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground!")} />
       {sort.length > 1 && isActive ? (
         <span className="absolute -right-0.5 -top-0.5 flex size-3.5 items-center justify-center rounded-full bg-primary-500 text-[9px] font-semibold leading-none text-primary-foreground">
           {sortIndex + 1}

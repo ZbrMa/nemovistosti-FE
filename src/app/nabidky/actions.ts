@@ -29,9 +29,9 @@ export async function getListingRows(input: ListingSearchInput) {
 }
 
 export async function exportListingRows(input: ListingExportInput) {
-  return safeQuery(
-    "market_listings.export_listings",
-    () => exportListings({ p_filters: input.p_filters ?? [] }),
-    [],
-  );
+  return exportListings({
+    p_filters: input.p_filters ?? [],
+    p_limit: input.p_limit,
+    p_offset: input.p_offset,
+  });
 }

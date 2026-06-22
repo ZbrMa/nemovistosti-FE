@@ -13,6 +13,7 @@ import type {
 import {
   emptyStringToNull,
   formatSupabaseError,
+  normalizeExportLimit,
   normalizeLimit,
   normalizeOffset,
 } from "./utils";
@@ -42,6 +43,22 @@ const cachedListingsRpc = unstable_cache(
     tags: [LISTINGS_DATA_CACHE_TAG],
   },
 );
+
+async function listingsRpc(functionName: string, params: Record<string, unknown>) {
+  const client = getSupabaseServerClient() as unknown as {
+    rpc: (
+      functionName: string,
+      params?: Record<string, unknown>,
+    ) => PromiseLike<{ data: unknown; error: PostgrestError | null }>;
+  };
+  const { data, error } = await client.rpc(functionName, params);
+
+  if (error) {
+    throw formatSupabaseError(functionName, error);
+  }
+
+  return data;
+}
 
 export async function getListingPriceHistory(
   listingId: string,
@@ -97,9 +114,11 @@ export async function exportListings(
 ): Promise<ListingSearchRow[]> {
   const normalizedParams: ListingExportInput = {
     p_filters: params.p_filters ?? [],
+    p_limit: normalizeExportLimit(params.p_limit),
+    p_offset: normalizeOffset(params.p_offset),
   };
 
-  const data = await cachedListingsRpc(
+  const data = await listingsRpc(
     "export_listings",
     normalizedParams as Record<string, unknown>,
   );

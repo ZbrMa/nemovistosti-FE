@@ -42,6 +42,7 @@ import type {
   PriceChangeDirection,
 } from "@/types/listings";
 import type { ListingSearchFilter, ListingSearchInput } from "@/types/listings";
+import type { Worksheet } from "exceljs";
 
 import { exportListingRows, getListingRows } from "@/app/nabidky/actions";
 import {
@@ -63,6 +64,7 @@ type ListingsTableProps = {
 };
 
 const PAGE_SIZE = 500;
+const EXPORT_BATCH_SIZE = 5000;
 
 type SortKey =
   | "region"
@@ -126,6 +128,8 @@ export function ListingsTable({
   const [pageIndex, setPageIndex] = useState(0);
   const [isPending, startTransition] = useTransition();
   const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+  const [exportProgress, setExportProgress] = useState(0);
   const filterOptions = useMemo(
     () => getFilterOptions(rows, facets),
     [facets, rows],
@@ -214,15 +218,62 @@ export function ListingsTable({
 
   async function handleExport() {
     setIsExporting(true);
+    setExportError(null);
+    setExportProgress(0);
 
     try {
-      const exportRows = await exportListingRows(
-        getListingExportInput(filters, filterOptions),
-      );
+      const ExcelJS = await import("exceljs");
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Nabídky");
+      const exportInput = getListingExportInput(filters, filterOptions);
+      let offset = 0;
+      let totalExported = 0;
 
-      exportRowsToCsv(exportRows);
+      setupListingsWorksheet(worksheet);
+
+      while (true) {
+        setExportProgress(getExportProgress(totalExported, totalCount));
+
+        const batchRows = await exportListingRows({
+          p_filters: exportInput.p_filters,
+          p_limit: EXPORT_BATCH_SIZE,
+          p_offset: offset,
+        });
+
+        appendListingRowsToWorksheet(worksheet, batchRows);
+
+        totalExported += batchRows.length;
+        setExportProgress(getExportProgress(totalExported, totalCount));
+
+        if (batchRows.length < EXPORT_BATCH_SIZE) {
+          break;
+        }
+
+        offset += EXPORT_BATCH_SIZE;
+      }
+
+      if (totalExported === 0) {
+        return;
+      }
+
+      worksheet.views = [{ state: "frozen", ySplit: 1 }];
+      worksheet.autoFilter = {
+        from: { row: 1, column: 1 },
+        to: { row: 1, column: worksheet.columnCount },
+      };
+
+      const buffer = await workbook.xlsx.writeBuffer();
+
+      downloadWorkbookBuffer(buffer as BlobPart, "nabidky.xlsx");
+      setExportProgress(100);
+    } catch (error) {
+      console.error(error);
+      setExportError(
+        "Export se nepodařilo dokončit. Zkuste prosím upravit filtry nebo export spustit znovu.",
+      );
     } finally {
       setIsExporting(false);
+      setExportProgress(0);
     }
   }
 
@@ -257,11 +308,26 @@ export function ListingsTable({
             size="xs"
             onClick={handleExport}
             disabled={isPending || isExporting || totalCount === 0}
+            className="relative overflow-hidden"
           >
-            <Download data-icon="inline-start" />
-            {isExporting ? "Exportuji..." : "Export do Excelu"}
+            {isExporting ? (
+              <span
+                className="absolute inset-y-0 left-0 bg-primary/25 transition-[width] duration-300 ease-out"
+                style={{ width: `${exportProgress}%` }}
+                aria-hidden="true"
+              />
+            ) : null}
+            <span className="relative z-10 inline-flex items-center gap-1.5">
+              <Download data-icon="inline-start" />
+              Export do Excelu
+            </span>
           </Button>
         </div>
+        {exportError ? (
+          <div className="text-sm text-muted-foreground lg:text-right">
+            <p className="text-destructive">{exportError}</p>
+          </div>
+        ) : null}
       </div>
 
       <div
@@ -1484,60 +1550,70 @@ function getPriceChangeDirectionLabel(value: string | null | undefined) {
   return "Beze změny";
 }
 
-function escapeCsvValue(value: string | number | boolean | null) {
-  const normalizedValue = value === null ? "" : String(value);
+function getExportProgress(exportedRows: number, expectedRows: number) {
+  if (expectedRows <= 0) {
+    return 0;
+  }
 
-  return `"${normalizedValue.replace(/"/g, '""')}"`;
+  return Math.min(Math.round((exportedRows / expectedRows) * 100), 100);
 }
 
-function exportRowsToCsv(rows: ListingSearchRow[]) {
-  const headers = [
-    "Kraj",
-    "Okres",
-    "Město",
-    "Typ",
-    "Nabídka",
-    "Dispozice",
-    "Plocha",
-    "Cena",
-    "Předchozí cena",
-    "Změna ceny",
-    "Změna ceny Kč",
-    "Změna ceny %",
-    "Cena za m2",
-    "URL",
+function setupListingsWorksheet(worksheet: Worksheet) {
+  worksheet.columns = [
+    { header: "Kraj", key: "region", width: 24 },
+    { header: "Okres", key: "district", width: 24 },
+    { header: "Město", key: "city", width: 24 },
+    { header: "Typ", key: "property_type", width: 16 },
+    { header: "Nabídka", key: "offer_type", width: 16 },
+    { header: "Dispozice", key: "disposition", width: 14 },
+    { header: "Plocha", key: "area_m2", width: 12 },
+    { header: "Cena", key: "latest_price", width: 16 },
+    { header: "Předchozí cena", key: "previous_price", width: 16 },
+    { header: "Změna ceny", key: "price_change_direction", width: 16 },
+    { header: "Změna ceny Kč", key: "price_change_amount", width: 16 },
+    { header: "Změna ceny %", key: "price_change_percent", width: 16 },
+    { header: "Cena za m2", key: "latest_price_per_m2", width: 16 },
+    { header: "URL", key: "listing_url", width: 48 },
   ];
-  const csvRows = rows.map((row) =>
-    [
-      row.region,
-      row.district,
-      row.city,
-      getPropertyTypeLabel(row.property_type),
-      getOfferTypeLabel(row.offer_type),
-      row.disposition,
-      row.area_m2,
-      row.latest_price,
-      row.previous_price,
-      getPriceChangeDirectionLabel(row.price_change_direction),
-      row.price_change_amount,
-      row.price_change_percent,
-      row.latest_price_per_m2,
-      row.listing_url,
-    ]
-      .map(escapeCsvValue)
-      .join(";"),
-  );
-  const csv = `\uFEFF${[headers.map(escapeCsvValue).join(";"), ...csvRows].join(
-    "\r\n",
-  )}`;
-  const blob = new Blob([csv], {
-    type: "text/csv;charset=utf-8;",
+
+  worksheet.getRow(1).font = { bold: true };
+}
+
+function appendListingRowsToWorksheet(
+  worksheet: Worksheet,
+  rows: ListingSearchRow[],
+) {
+  for (const row of rows) {
+    worksheet.addRow({
+      region: row.region,
+      district: row.district,
+      city: row.city,
+      property_type: getPropertyTypeLabel(row.property_type),
+      offer_type: getOfferTypeLabel(row.offer_type),
+      disposition: row.disposition,
+      area_m2: row.area_m2,
+      latest_price: row.latest_price,
+      previous_price: row.previous_price,
+      price_change_direction: getPriceChangeDirectionLabel(
+        row.price_change_direction,
+      ),
+      price_change_amount: row.price_change_amount,
+      price_change_percent: row.price_change_percent,
+      latest_price_per_m2: row.latest_price_per_m2,
+      listing_url: row.listing_url,
+    });
+  }
+}
+
+function downloadWorkbookBuffer(buffer: BlobPart, filename: string) {
+  const blob = new Blob([buffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
 
   link.href = url;
-  link.download = "nabidky.csv";
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   link.remove();

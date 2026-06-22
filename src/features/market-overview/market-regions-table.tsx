@@ -157,7 +157,7 @@ function SortButton({
       onClick={onClick}
     >
       {label}
-      <Icon className="ml-1 size-3.5 text-muted-foreground" />
+      <Icon className="ml-1 size-3.5 text-muted-foreground hover:text-foreground" />
     </Button>
   );
 }
