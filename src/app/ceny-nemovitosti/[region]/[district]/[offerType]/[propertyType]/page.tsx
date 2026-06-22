@@ -143,7 +143,7 @@ export default async function SeoLandingPageRoute({
     {
       label: "Počet aktivních nabídek",
       value: formatNullableMetric(overview?.listings_count, formatCount, hasListings),
-      description: "Denní agregace aktivního trhu",
+      description: "Aktuálně sledované aktivní nabídky",
       icon: Building2,
     },
     {
@@ -333,7 +333,7 @@ export default async function SeoLandingPageRoute({
             </h2>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
               Přehled pracuje pouze s aktuálně evidovanými a historicky zachycenými
-              nabídkami v databázi, nikoliv s celým trhem.
+              nabídkami, nikoliv s celým trhem.
             </p>
           </div>
 
@@ -544,7 +544,7 @@ function buildPriceInterpretation(
   const offerLabel = getSeoOfferTypeLabel(page.offer_type as OfferType);
   const comments: ReactNode[] = [
     <p key="context">
-      Podle aktuálně evidovaných aktivních nabídek v databázi pro segment{" "}
+      Podle aktuálně evidovaných aktivních nabídek pro segment{" "}
       <strong>{propertyPlural} {offerLabel}</strong> v okrese{" "}
       <strong>{page.district}</strong> je vhodné číst cenové metriky jako
       orientační obraz nabídkové strany trhu, nikoliv jako realizované ceny.
@@ -603,7 +603,7 @@ function buildPriceInterpretation(
         <strong>Průměrná evidovaná plocha</strong> vychází na{" "}
         <strong>{formatAreaMetric(overview.avg_area_m2, true)}</strong>, což
         pomáhá zasadit cenovou hladinu do kontextu typické velikosti nabídek v
-        databázi.
+        daném segmentu.
       </p>,
     );
   }
@@ -729,7 +729,7 @@ function getTrendSummary(points: MarketTimeseriesPoint[]): TrendSummary {
       <p>
         Ve sledovaném období <strong>{metricLabel}</strong> vzrostly. Nejde o
         realizované ceny, ale o posun v cenové hladině aktuálně evidovaných
-        nabídek v databázi.
+        nabídek.
       </p>
     );
   } else if (changeRatio <= -0.1) {
@@ -788,7 +788,7 @@ function buildActivityCommentary(summary: MarketActivitySummary | null) {
     comments.push(
       <p key="age">
         <strong>Průměrné stáří aktivních nabídek</strong> je vyšší, takže některé
-        nabídky zůstávají v databázi delší dobu.
+        nabídky zůstávají aktivní delší dobu.
       </p>,
     );
   }

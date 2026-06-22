@@ -3,6 +3,7 @@ import type { PostgrestError } from "@supabase/supabase-js";
 
 import { getSupabaseServerClient } from "@/lib/supabase/server";
 import type {
+  ListingExportInput,
   ListingPriceHistoryRow,
   ListingSearchCountInput,
   ListingSearchInput,
@@ -89,4 +90,19 @@ export async function searchListingsCount(
   );
 
   return Number(data ?? 0);
+}
+
+export async function exportListings(
+  params: ListingExportInput = {},
+): Promise<ListingSearchRow[]> {
+  const normalizedParams: ListingExportInput = {
+    p_filters: params.p_filters ?? [],
+  };
+
+  const data = await cachedListingsRpc(
+    "export_listings",
+    normalizedParams as Record<string, unknown>,
+  );
+
+  return data as ListingSearchRow[];
 }

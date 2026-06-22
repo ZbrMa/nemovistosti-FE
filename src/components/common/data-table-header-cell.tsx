@@ -132,7 +132,7 @@ function DataTableHeaderCellComponent({
                 "relative p-0 text-muted-foreground hover:text-foreground",
                 isFiltered && "text-foreground",
               )}
-              aria-label={`Filtrovat sloupec ${label}`}
+              aria-label={`Filtrovat ${label}`}
             />
           }
         >

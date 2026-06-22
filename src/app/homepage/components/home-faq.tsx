@@ -9,22 +9,22 @@ const faqItems = [
   {
     question: "Co tento realitní analytický přehled sleduje?",
     answer:
-      "Agregované tržní statistiky, cenové trendy, počet nabídek a vývoj vybraných segmentů realitního trhu.",
+      "Souhrnné tržní statistiky, cenové trendy, počet nabídek a vývoj vybraných částí realitního trhu.",
   },
   {
     question: "Jak často jsou data aktualizována?",
     answer:
-      "Datová vrstva je navržená pro denně aktualizovaná data, aby bylo možné sledovat změny trhu s krátkým zpožděním.",
+      "Data jsou připravená pro pravidelnou aktualizaci, aby bylo možné sledovat změny trhu s krátkým zpožděním.",
   },
   {
     question: "Jak se počítá cena za m²?",
     answer:
-      "Cena za m² vychází z dostupné ceny a plochy nemovitosti. V přehledech se používají agregace jako průměr a medián.",
+      "Cena za m² vychází z dostupné ceny a plochy nemovitosti. V přehledech se používá například průměr a medián.",
   },
   {
-    question: "K čemu slouží market screener?",
+    question: "K čemu slouží porovnání trhu?",
     answer:
-      "Market screener pomáhá porovnávat segmenty trhu podle lokality, typu nemovitosti, typu nabídky, počtu nabídek a cen za m².",
+      "Pomáhá porovnávat části trhu podle lokality, typu nemovitosti, typu nabídky, počtu nabídek a cen za m².",
   },
 ] as const;
 

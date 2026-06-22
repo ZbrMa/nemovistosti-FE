@@ -36,7 +36,11 @@ import {
 } from "@/lib/market-taxonomy";
 import { cn } from "@/lib/utils";
 import type { MarketFacets } from "@/types/market";
-import type { ListingSearchRow, PriceChangeDirection } from "@/types/listings";
+import type {
+  ListingExportInput,
+  ListingSearchRow,
+  PriceChangeDirection,
+} from "@/types/listings";
 import type { ListingSearchFilter, ListingSearchInput } from "@/types/listings";
 
 import { exportListingRows, getListingRows } from "@/app/nabidky/actions";
@@ -213,7 +217,7 @@ export function ListingsTable({
 
     try {
       const exportRows = await exportListingRows(
-        getListingSearchInput(filters, sort, 0, filterOptions, false),
+        getListingExportInput(filters, filterOptions),
       );
 
       exportRowsToCsv(exportRows);
@@ -230,8 +234,8 @@ export function ListingsTable({
             Seznam nabídek
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Kompletní výpis aktivních nabídek z procedury search_listings s
-            lokálním filtrováním, řazením a exportem.
+            Kompletní výpis aktivních nabídek s filtrováním, řazením a
+            exportem.
           </p>
         </div>
 
@@ -1039,6 +1043,34 @@ function getListingSearchInput(
   options: FilterOptions,
   includePagination = true,
 ): ListingSearchInput {
+  const p_filters = getListingFilters(filters, options);
+
+  const input: ListingSearchInput = {
+    p_filters,
+    p_sorts: [{ column: sort.key, dir: sort.direction, nulls: "last" }],
+  };
+
+  if (includePagination) {
+    input.p_limit = PAGE_SIZE;
+    input.p_offset = pageIndex * PAGE_SIZE;
+  }
+
+  return input;
+}
+
+function getListingExportInput(
+  filters: FilterState,
+  options: FilterOptions,
+): ListingExportInput {
+  return {
+    p_filters: getListingFilters(filters, options),
+  };
+}
+
+function getListingFilters(
+  filters: FilterState,
+  options: FilterOptions,
+): ListingSearchFilter[] {
   const p_filters: ListingSearchFilter[] = [];
 
   addSelectionFilter(
@@ -1093,17 +1125,7 @@ function getListingSearchInput(
   );
   addPriceChangeDirectionFilter(p_filters, filters.priceChangeDirections);
 
-  const input: ListingSearchInput = {
-    p_filters,
-    p_sorts: [{ column: sort.key, dir: sort.direction, nulls: "last" }],
-  };
-
-  if (includePagination) {
-    input.p_limit = PAGE_SIZE;
-    input.p_offset = pageIndex * PAGE_SIZE;
-  }
-
-  return input;
+  return p_filters;
 }
 
 function addSelectionFilter(

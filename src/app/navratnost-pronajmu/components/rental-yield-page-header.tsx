@@ -5,8 +5,8 @@ export function RentalYieldPageHeader() {
         Kalkulačka návratnosti pronájmu
       </h1>
       <p className="mt-3 text-base leading-7 text-muted-foreground">
-        Tržní hodnoty se předvyplní podle kraje a okresu z agregace
-          market_regions. Vstupy lze ručně upravit pro vlastní scénář.
+        Tržní hodnoty se předvyplní podle vybraného kraje a okresu. Vstupy lze
+        ručně upravit pro vlastní scénář.
       </p>
     </section>
   );

@@ -30,6 +30,10 @@ export type ListingSearchCountInput = {
   p_filters?: ListingSearchFilter[];
 };
 
+export type ListingExportInput = {
+  p_filters?: ListingSearchFilter[];
+};
+
 export type ListingSearchFilter = {
   column: ListingSearchColumn;
   op:

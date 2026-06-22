@@ -31,6 +31,7 @@ import type {
   MarketYieldsInput,
 } from "@/types/market";
 import type {
+  ListingExportInput,
   ListingPriceHistoryInput,
   ListingPriceHistoryRow,
   ListingSearchCountInput,
@@ -110,6 +111,10 @@ type Database = {
       search_listings_count: {
         Args: ListingSearchCountInput;
         Returns: number;
+      };
+      export_listings: {
+        Args: ListingExportInput;
+        Returns: ListingSearchRow[];
       };
     };
     Enums: Record<string, never>;

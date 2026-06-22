@@ -81,8 +81,8 @@ export default function MetodikaPage() {
                   inzerátů.
                 </p>
                 <p>
-                  Web vzniká jako osobní hobby projekt a datový experiment,
-                  který dělám z vlastní zvědavosti. Výstupy proto beru jako
+                  Web vzniká jako osobní hobby projekt, který dělám z vlastní
+                  zvědavosti. Výstupy proto beru jako
                   analytickou pomůcku pro orientaci v trhu, ne jako oficiální
                   statistiku nebo investiční doporučení.
                 </p>
@@ -101,16 +101,14 @@ export default function MetodikaPage() {
               >
                 <p>
                   Data pocházejí z veřejně dostupných realitních nabídek, které
-                  pravidelně automatizovaně zpracovávám. Zaznamenávám zejména
-                  textové a strukturované informace, které jsou potřeba pro
-                  analytické vyhodnocení nabídky, cen a lokality.
+                  pravidelně zpracovávám. Zaznamenávám hlavně informace potřebné
+                  pro porovnání nabídek, cen a lokalit.
                 </p>
                 <p>
-                  Při zpracování sjednocuji názvy lokalit, typy transakcí,
-                  kategorie nemovitostí a další atributy tak, aby šlo data
-                  porovnávat mezi regiony a v čase. Výsledkem nejsou redakčně
-                  upravené profily inzerátů, ale datová vrstva určená pro
-                  statistické a metodické vyhodnocení.
+                  Při zpracování sjednocuji názvy lokalit, typy transakcí a
+                  kategorie nemovitostí tak, aby šlo nabídky porovnávat mezi
+                  regiony a v čase. Výsledkem nejsou redakčně upravené profily
+                  inzerátů, ale přehled určený hlavně pro statistické srovnání.
                 </p>
               </MethodologySection>
 
@@ -128,9 +126,9 @@ export default function MetodikaPage() {
                 <p>
                   Historie nabídek je důležitá i pro detekci změn, jako je
                   opakované zlevnění nemovitostí nebo dlouhodobě stagnující
-                  cena. Pokud se nabídka znovu objeví v upravené podobě, systém
-                  se ji snaží přiřadit k existující historii podle dostupných
-                  identifikátorů a dalších shodných znaků.
+                  cena. Pokud se nabídka znovu objeví v upravené podobě, snažím
+                  se ji přiřadit k dřívější historii podle dostupných shodných
+                  znaků.
                 </p>
               </MethodologySection>
 
@@ -220,7 +218,7 @@ export default function MetodikaPage() {
                 </p>
                 <p>
                   Omezením je také různá kvalita zdrojových inzerátů. Některé
-                  nabídky mohou mít neúplné parametry, nekonzistentní plochy,
+                  nabídky mohou mít neúplné údaje, nekonzistentní plochy,
                   chybějící dispozici nebo nepřesně uvedenou lokalitu. U menších
                   segmentů trhu navíc může nízký počet záznamů vést k vyšší
                   volatilitě výsledných ukazatelů.
@@ -228,11 +226,11 @@ export default function MetodikaPage() {
                 <p>
                   Část nabídek může být v datech duplicitní, protože stejná
                   nemovitost mohla být inzerována vícekrát, například pokaždé v
-                  jiné kategorii nebo s upravenými parametry. I když se systém
-                  snaží historii nabídek spojovat podle dostupných znaků, není
-                  možné duplicity odstranit dokonale. Celková čísla je proto
-                  potřeba brát s rezervou a vnímat je hlavně jako orientační
-                  obraz veřejně dostupné nabídky.
+                  jiné kategorii nebo s upravenými údaji. I když se snažím
+                  historii nabídek spojovat podle dostupných znaků, není možné
+                  duplicity odstranit dokonale. Celková čísla je proto potřeba
+                  brát s rezervou a vnímat je hlavně jako orientační obraz
+                  veřejně dostupné nabídky.
                 </p>
               </MethodologySection>
 
@@ -241,8 +239,8 @@ export default function MetodikaPage() {
                 title="Aktualizace dat"
               >
                 <p>
-                  Sběr a zpracování dat probíhá pravidelně v automatizovaných
-                  dávkách. Cílem je průběžně aktualizovat informace o cenách,
+                  Sběr a zpracování dat probíhá pravidelně. Cílem je průběžně
+                  aktualizovat informace o cenách,
                   nájmech, aktivitě nabídky i historii změn tak, aby stránka
                   zachycovala aktuální situaci na trhu bez ručního přepisování
                   jednotlivých inzerátů.

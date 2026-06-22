@@ -69,7 +69,7 @@ export function buildSeoLandingDescription(overview: MarketOverview | null) {
       ? "průměrnou a mediánovou nabídkovou cenu"
       : "přehled aktivních nabídek";
 
-  return `Přehled aktivních nabídek v databázi včetně ${overviewPart}, ceny za m² a vývoje evidovaných nabídkových cen.`;
+  return `Přehled aktuálně sledovaných aktivních nabídek včetně ${overviewPart}, ceny za m² a vývoje evidovaných nabídkových cen.`;
 }
 
 export function buildSeoLandingSummary(
@@ -130,7 +130,7 @@ export function buildSeoLandingSummary(
       { text: " v okrese " },
       { text: page.district, strong: true },
       {
-        text: " sledujeme podle aktuálně evidovaných aktivních nabídek v databázi. Stránka poskytuje orientační přehled nabídkových cen a vývoje monitorovaných nabídek.",
+        text: " sledujeme podle aktuálně evidovaných aktivních nabídek. Stránka poskytuje orientační přehled nabídkových cen a vývoje monitorovaných nabídek.",
       },
     ]);
   }
@@ -139,7 +139,7 @@ export function buildSeoLandingSummary(
 
   if (listingsCount) {
     contextParagraph.push(
-      { text: "V databázi aktuálně evidujeme " },
+      { text: "Aktuálně eviduji " },
       {
         text: `${formatCountValue(listingsCount)} aktivních nabídek`,
         strong: true,
